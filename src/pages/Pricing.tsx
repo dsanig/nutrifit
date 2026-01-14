@@ -1,9 +1,11 @@
-import { Link } from "react-router-dom";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Star, Zap, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Check, Star, Zap, ArrowRight, Mail, UserRound } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 
 const plans = [
   {
@@ -54,6 +56,27 @@ const plans = [
 ];
 
 export default function Pricing() {
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [addOnSelected, setAddOnSelected] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState<"idle" | "email" | "account" | "checkout">("idle");
+  const [email, setEmail] = useState("");
+  const summaryRef = useRef<HTMLDivElement | null>(null);
+
+  const selectedPlan = useMemo(
+    () => plans.find((plan) => plan.id === selectedPlanId) ?? null,
+    [selectedPlanId],
+  );
+  const addOnPrice = 25;
+  const totalPrice = selectedPlan ? selectedPlan.price + (addOnSelected ? addOnPrice : 0) : 0;
+
+  const handleSelectPlan = (planId: string) => {
+    setSelectedPlanId(planId);
+    setCheckoutStep("idle");
+    if (summaryRef.current) {
+      summaryRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -115,6 +138,7 @@ export default function Pricing() {
                   <Button 
                     className={`w-full ${plan.popular ? "shadow-button" : ""}`}
                     variant={plan.popular ? "default" : "outline"}
+                    onClick={() => handleSelectPlan(plan.id)}
                   >
                     Elegir plan
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -122,6 +146,66 @@ export default function Pricing() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          {/* Selected Plan Summary */}
+          <div ref={summaryRef} className="space-y-6 mb-10">
+            <Card className="border-2 border-primary/40 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-foreground">
+                  {selectedPlan ? "Tu plan seleccionado" : "Selecciona un plan para continuar"}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {selectedPlan
+                    ? "Revisa los detalles, añade el seguimiento inteligente y confirma tu compra."
+                    : "Al elegir uno de los planes arriba, veremos aquí el resumen de compra."}
+                </p>
+              </CardHeader>
+              {selectedPlan && (
+                <CardContent className="space-y-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-lg font-semibold text-foreground">{selectedPlan.name}</p>
+                      <p className="text-sm text-muted-foreground">{selectedPlan.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-3xl font-bold text-foreground">{selectedPlan.price}€</span>
+                      <span className="text-muted-foreground">/{selectedPlan.duration}</span>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {selectedPlan.features.map((feature, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-success mt-0.5" />
+                        <span className="text-sm text-foreground">{feature}</span>
+                      </div>
+                    ))}
+                    {addOnSelected && (
+                      <div className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-accent mt-0.5" />
+                        <span className="text-sm text-foreground">
+                          Seguimiento Inteligente activo (informes y ajustes semanales)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="rounded-lg border border-border bg-background p-4">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Plan base</span>
+                      <span>{selectedPlan.price}€</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Seguimiento Inteligente</span>
+                      <span>{addOnSelected ? `+${addOnPrice}€` : "No añadido"}</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-base font-semibold text-foreground">
+                      <span>Total estimado</span>
+                      <span>{totalPrice}€</span>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
           </div>
 
           {/* Premium Add-on */}
@@ -157,12 +241,126 @@ export default function Pricing() {
                       <span className="text-2xl font-bold text-foreground">25€</span>
                       <span className="text-muted-foreground">/mes</span>
                     </div>
-                    <Button variant="outline" className="border-accent text-accent hover:bg-accent hover:text-accent-foreground">
-                      Añadir al plan
+                    <Button
+                      variant="outline"
+                      className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                      onClick={() => setAddOnSelected((prev) => !prev)}
+                    >
+                      {addOnSelected ? "Quitar del plan" : "Añadir al plan"}
                     </Button>
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Checkout Flow */}
+          <Card className="border-2 border-primary/30 mb-12">
+            <CardContent className="p-6 sm:p-8 space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground">Confirmar compra</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Completa el proceso para activar tu plan y desbloquear el acceso inmediato.
+                  </p>
+                </div>
+                <Button
+                  className="shrink-0"
+                  disabled={!selectedPlan}
+                  onClick={() => setCheckoutStep("email")}
+                >
+                  Confirmar compra
+                </Button>
+              </div>
+
+              {checkoutStep === "email" && (
+                <div className="grid gap-4 rounded-lg border border-border bg-background p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Mail className="w-4 h-4" />
+                    <span>Introduce tu email para continuar</span>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="checkout-email">Email</Label>
+                    <Input
+                      id="checkout-email"
+                      type="email"
+                      placeholder="tucorreo@email.com"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={() => setCheckoutStep("account")}
+                      disabled={!email}
+                    >
+                      Continuar con el email
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {checkoutStep === "account" && (
+                <div className="grid gap-4 rounded-lg border border-border bg-background p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <UserRound className="w-4 h-4" />
+                    <span>Crea tu cuenta</span>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="checkout-name">Nombre</Label>
+                      <Input id="checkout-name" type="text" placeholder="María López" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="checkout-password">Contraseña</Label>
+                      <Input id="checkout-password" type="password" placeholder="••••••••" />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={() => setCheckoutStep("checkout")}>Crear cuenta</Button>
+                  </div>
+                </div>
+              )}
+
+              {checkoutStep === "checkout" && selectedPlan && (
+                <div className="grid gap-6 rounded-lg border border-border bg-background p-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Paso final: revisa y paga</p>
+                    <p className="text-sm text-muted-foreground">
+                      Todo listo para completar tu compra. El acceso se activará inmediatamente.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-sm font-medium text-foreground mb-2">Resumen de compra</p>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{selectedPlan.name}</span>
+                      <span>{selectedPlan.price}€</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Seguimiento Inteligente</span>
+                      <span>{addOnSelected ? `+${addOnPrice}€` : "No añadido"}</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-base font-semibold text-foreground">
+                      <span>Total</span>
+                      <span>{totalPrice}€</span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-accent/40 bg-accent/10 p-4 text-sm text-foreground">
+                    <p className="font-semibold mb-2">Si no completas la compra</p>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                      <li>Enviaremos recordatorios por email durante las próximas 48h.</li>
+                      <li>La oferta quedará disponible en tu cuenta para finalizarla cuando quieras.</li>
+                      <li>Podrás completar el pago desde el área de cliente con un solo clic.</li>
+                    </ul>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <Button variant="outline">Ver oferta en mi cuenta</Button>
+                    <Button className="shadow-button">Finalizar compra</Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
