@@ -23,9 +23,6 @@ export function Header() {
             <Link to="/#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Cómo funciona
             </Link>
-            <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Precios
-            </Link>
             <Link to="/#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               FAQ
             </Link>
@@ -65,13 +62,6 @@ export function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Cómo funciona
-              </Link>
-              <Link 
-                to="/pricing" 
-                className="text-foreground py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Precios
               </Link>
               <Link 
                 to="/#faq" 
