@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, Star, Zap, ArrowRight, Mail, UserRound } from "lucide-react";
+import { Check, Star, Zap, ArrowRight, Mail, UserRound, Loader2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -13,6 +15,7 @@ const plans = [
     name: "Prueba",
     price: 9,
     duration: "7 días",
+    durationMonths: 0, // Less than 1 month, no add-on multiplier
     description: "Ideal para probar el sistema",
     features: [
       "Acceso completo al plan personalizado",
@@ -28,6 +31,7 @@ const plans = [
     name: "Mensual",
     price: 19,
     duration: "1 mes",
+    durationMonths: 1,
     description: "Nuestro plan más popular",
     features: [
       "Todo lo de Prueba +",
@@ -43,6 +47,7 @@ const plans = [
     name: "Trimestral",
     price: 39,
     duration: "3 meses",
+    durationMonths: 3,
     description: "Mejor valor para resultados duraderos",
     features: [
       "Todo lo de Mensual +",
@@ -55,18 +60,30 @@ const plans = [
   },
 ];
 
+const ADD_ON_BASE_PRICE = 25; // €25 per month
+
 export default function Pricing() {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [addOnSelected, setAddOnSelected] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<"idle" | "email" | "account" | "checkout">("idle");
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const summaryRef = useRef<HTMLDivElement | null>(null);
 
   const selectedPlan = useMemo(
     () => plans.find((plan) => plan.id === selectedPlanId) ?? null,
     [selectedPlanId],
   );
-  const addOnPrice = 25;
+  
+  // Calculate add-on price based on plan duration (€25 per month)
+  const addOnPrice = useMemo(() => {
+    if (!selectedPlan) return 0;
+    // For 7-day plan, charge 1 month of add-on
+    return selectedPlan.durationMonths === 0 ? ADD_ON_BASE_PRICE : ADD_ON_BASE_PRICE * selectedPlan.durationMonths;
+  }, [selectedPlan]);
+  
   const totalPrice = selectedPlan ? selectedPlan.price + (addOnSelected ? addOnPrice : 0) : 0;
 
   const handleSelectPlan = (planId: string) => {
@@ -74,6 +91,62 @@ export default function Pricing() {
     setCheckoutStep("idle");
     if (summaryRef.current) {
       summaryRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const handleCreateAccount = async () => {
+    if (!email || !name || !password || !selectedPlan) return;
+    
+    setIsLoading(true);
+    try {
+      // Create Supabase account
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+        },
+      });
+
+      if (error) throw error;
+      
+      setCheckoutStep("checkout");
+      toast.success("Cuenta creada correctamente");
+    } catch (error) {
+      console.error("Error creating account:", error);
+      toast.error("Error al crear la cuenta. Inténtalo de nuevo.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!selectedPlan || !email || !name) return;
+    
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: {
+          planId: selectedPlan.id,
+          planName: selectedPlan.name,
+          planPrice: selectedPlan.price,
+          addOnPrice: addOnSelected ? addOnPrice : 0,
+          email,
+          name,
+          duration: selectedPlan.duration,
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast.error("Error al procesar el pago. Inténtalo de nuevo.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -240,11 +313,17 @@ export default function Pricing() {
                     <div>
                       <span className="text-2xl font-bold text-foreground">25€</span>
                       <span className="text-muted-foreground">/mes</span>
+                      {selectedPlan && selectedPlan.durationMonths > 1 && (
+                        <span className="block text-sm text-muted-foreground">
+                          ({addOnPrice}€ para {selectedPlan.duration})
+                        </span>
+                      )}
                     </div>
                     <Button
                       variant="outline"
                       className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
                       onClick={() => setAddOnSelected((prev) => !prev)}
+                      disabled={!selectedPlan}
                     >
                       {addOnSelected ? "Quitar del plan" : "Añadir al plan"}
                     </Button>
@@ -309,15 +388,39 @@ export default function Pricing() {
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="grid gap-2">
                       <Label htmlFor="checkout-name">Nombre</Label>
-                      <Input id="checkout-name" type="text" placeholder="María López" />
+                      <Input 
+                        id="checkout-name" 
+                        type="text" 
+                        placeholder="María López"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                      />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="checkout-password">Contraseña</Label>
-                      <Input id="checkout-password" type="password" placeholder="••••••••" />
+                      <Input 
+                        id="checkout-password" 
+                        type="password" 
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <Button onClick={() => setCheckoutStep("checkout")}>Crear cuenta</Button>
+                    <Button 
+                      onClick={handleCreateAccount}
+                      disabled={!name || !password || isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Creando cuenta...
+                        </>
+                      ) : (
+                        "Crear cuenta"
+                      )}
+                    </Button>
                   </div>
                 </div>
               )}
@@ -357,7 +460,20 @@ export default function Pricing() {
 
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <Button variant="outline">Ver oferta en mi cuenta</Button>
-                    <Button className="shadow-button">Finalizar compra</Button>
+                    <Button 
+                      className="shadow-button"
+                      onClick={handleCheckout}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Procesando...
+                        </>
+                      ) : (
+                        "Finalizar compra"
+                      )}
+                    </Button>
                   </div>
                 </div>
               )}
