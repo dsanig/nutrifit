@@ -95,7 +95,13 @@ export default function Pricing() {
   };
 
   const handleCreateAccount = async () => {
-    if (!email || !name || !password || !selectedPlan) return;
+    if (!email || !name || !selectedPlan) return;
+    
+    // Validate password length
+    if (!password || password.length < 6) {
+      toast.error("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -105,10 +111,26 @@ export default function Pricing() {
         password,
         options: {
           data: { name },
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific error types
+        if (error.message.includes("User already registered")) {
+          toast.error("Este email ya está registrado. Prueba a iniciar sesión.");
+          return;
+        }
+        if (error.message.includes("weak_password") || error.message.includes("Password")) {
+          toast.error("La contraseña debe tener al menos 6 caracteres");
+          return;
+        }
+        if (error.message.includes("Invalid email")) {
+          toast.error("El email introducido no es válido");
+          return;
+        }
+        throw error;
+      }
       
       setCheckoutStep("checkout");
       toast.success("Cuenta creada correctamente");
@@ -401,10 +423,12 @@ export default function Pricing() {
                       <Input 
                         id="checkout-password" 
                         type="password" 
-                        placeholder="••••••••"
+                        placeholder="Mínimo 6 caracteres"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        minLength={6}
                       />
+                      <p className="text-xs text-muted-foreground">Mínimo 6 caracteres</p>
                     </div>
                   </div>
                   <div className="flex justify-end">
