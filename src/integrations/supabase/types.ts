@@ -14,7 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      habit_tracker: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          habit_name: string
+          id: string
+          user_id: string
+          week_number: number
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          habit_name: string
+          id?: string
+          user_id: string
+          week_number: number
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          habit_name?: string
+          id?: string
+          user_id?: string
+          week_number?: number
+        }
+        Relationships: []
+      }
+      metrics: {
+        Row: {
+          id: string
+          metric_type: string
+          notes: string | null
+          recorded_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          id?: string
+          metric_type: string
+          notes?: string | null
+          recorded_at?: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          id?: string
+          metric_type?: string
+          notes?: string | null
+          recorded_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          includes_addon: boolean | null
+          plan_id: string
+          plan_name: string
+          start_date: string
+          status: string
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          includes_addon?: boolean | null
+          plan_id: string
+          plan_name: string
+          start_date?: string
+          status?: string
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          includes_addon?: boolean | null
+          plan_id?: string
+          plan_name?: string
+          start_date?: string
+          status?: string
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

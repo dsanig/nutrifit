@@ -1,21 +1,58 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/landing/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Scale, Mail, Lock, ArrowRight } from "lucide-react";
+import { Scale, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement auth
-    console.log("Auth:", { email, password, isLogin });
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+        
+        toast.success("¡Bienvenido de nuevo!");
+        navigate("/dashboard");
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+            },
+          },
+        });
+
+        if (error) throw error;
+        
+        toast.success("¡Cuenta creada correctamente!");
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Ha ocurrido un error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,6 +112,20 @@ export default function Login() {
                   </div>
                 </div>
 
+                {!isLogin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nombre completo</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Tu nombre"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
                 {isLogin && (
                   <div className="text-right">
                     <Link 
@@ -86,9 +137,15 @@ export default function Login() {
                   </div>
                 )}
 
-                <Button type="submit" className="w-full shadow-button">
-                  {isLogin ? "Iniciar sesión" : "Crear cuenta"}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                <Button type="submit" className="w-full shadow-button" disabled={loading}>
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      {isLogin ? "Iniciar sesión" : "Crear cuenta"}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               </form>
 
