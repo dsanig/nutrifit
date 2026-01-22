@@ -1,13 +1,74 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { questions, Question, QuestionOption } from "@/lib/questions";
+import { questions, Question, QuestionOption, categories } from "@/lib/questions";
 import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import { Header } from "@/components/landing/Header";
+import { supabase } from "@/integrations/supabase/client";
 
 type Answer = string | number | string[];
+
+interface ProfileScore {
+  category: string;
+  score: number;
+  level: "bajo" | "medio" | "alto";
+  name: string;
+}
+
+function calculateProfile(answers: Record<number, unknown>) {
+  const categoryScores: Record<string, number[]> = {};
+
+  questions.forEach((q) => {
+    const answer = answers[q.id];
+    if (answer === undefined) return;
+
+    if (!categoryScores[q.category]) {
+      categoryScores[q.category] = [];
+    }
+
+    if (q.type === "multi") {
+      const multiAnswer = answer as string[];
+      const score = multiAnswer.includes("ninguna") ? 1 : Math.min(5, multiAnswer.length + 1);
+      categoryScores[q.category].push(score);
+    } else {
+      const option = q.options?.find((o) => o.value === answer);
+      if (option?.score) {
+        categoryScores[q.category].push(option.score);
+      }
+    }
+  });
+
+  const scores: ProfileScore[] = Object.entries(categoryScores).map(([category, scoreArr]) => {
+    const avgScore = scoreArr.reduce((a, b) => a + b, 0) / scoreArr.length;
+    const normalizedScore = Math.round((avgScore / 5) * 100);
+    
+    let level: "bajo" | "medio" | "alto" = "bajo";
+    if (normalizedScore >= 70) level = "alto";
+    else if (normalizedScore >= 40) level = "medio";
+
+    return {
+      category,
+      score: normalizedScore,
+      level,
+      name: categories[category as keyof typeof categories]?.name || category,
+    };
+  });
+
+  const sortedScores = scores.sort((a, b) => b.score - a.score);
+  const avgOverall = scores.reduce((a, b) => a + b.score, 0) / scores.length;
+
+  let riskLevel: "bajo" | "medio" | "alto" = "bajo";
+  if (avgOverall >= 65) riskLevel = "alto";
+  else if (avgOverall >= 40) riskLevel = "medio";
+
+  return {
+    scores: sortedScores,
+    riskLevel,
+    mainFactors: sortedScores.slice(0, 3),
+  };
+}
 
 export default function Test() {
   const navigate = useNavigate();
@@ -57,12 +118,34 @@ export default function Test() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // Store answers in localStorage for now (will be saved to DB later)
+    
+    // Calculate profile from answers
+    const profile = calculateProfile(answers);
+    
+    // Store in localStorage for Results page
     localStorage.setItem("testAnswers", JSON.stringify(answers));
-    // Navigate to results
-    setTimeout(() => {
-      navigate("/results");
-    }, 1000);
+    localStorage.setItem("testProfile", JSON.stringify(profile));
+    
+    // Try to save to database if user is logged in
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Delete existing answers first, then insert new ones
+        await supabase.from("test_answers").delete().eq("user_id", session.user.id);
+        // Using type assertion since table was just created
+        await (supabase.from("test_answers") as ReturnType<typeof supabase.from>).insert([{
+          user_id: session.user.id,
+          answers: answers,
+          profile_scores: profile.scores,
+          risk_level: profile.riskLevel,
+          main_factors: profile.mainFactors,
+        }]);
+      }
+    } catch (error) {
+      console.error("Error saving test answers:", error);
+    }
+    
+    navigate("/results");
   };
 
   return (

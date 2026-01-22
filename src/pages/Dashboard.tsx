@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { PlanView } from "@/components/dashboard/PlanView";
 import { 
   User, 
   Calendar, 
@@ -14,7 +15,9 @@ import {
   LogOut,
   Crown,
   Target,
-  Activity
+  Activity,
+  BookOpen,
+  Loader2
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
@@ -43,6 +46,46 @@ interface Habit {
   week_number: number;
 }
 
+interface UserPlan {
+  id: string;
+  plan_content: {
+    title: string;
+    summary: string;
+    estimatedDuration: string;
+    difficulty: string;
+  };
+  phases: Array<{
+    phase: number;
+    title: string;
+    duration: string;
+    description: string;
+    goals: string[];
+    keyActions: string[];
+  }>;
+  habits: Array<{
+    id: number;
+    title: string;
+    description: string;
+    frequency: string;
+    category: string;
+    priority: "high" | "medium" | "low";
+  }>;
+  nutrition_tips: Array<{
+    id: number;
+    title: string;
+    description: string;
+    examples: string[];
+  }>;
+  psychology_tips: Array<{
+    id: number;
+    title: string;
+    description: string;
+    technique: string;
+  }>;
+  status: string;
+  created_at: string;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -50,6 +93,9 @@ export default function Dashboard() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [weekProgress, setWeekProgress] = useState(0);
+  const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
+  const [showPlan, setShowPlan] = useState(false);
+  const [generatingPlan, setGeneratingPlan] = useState(false);
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -66,7 +112,8 @@ export default function Dashboard() {
     await Promise.all([
       loadProfile(session.user.id),
       loadSubscription(session.user.id),
-      loadHabits(session.user.id)
+      loadHabits(session.user.id),
+      loadUserPlan(session.user.id)
     ]);
     
     setLoading(false);
@@ -93,6 +140,44 @@ export default function Dashboard() {
       .maybeSingle();
     
     if (data) setSubscription(data);
+  };
+
+  const loadUserPlan = async (userId: string) => {
+    // Using type assertion since table was just created
+    const { data } = await (supabase.from("user_plans") as ReturnType<typeof supabase.from>)
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    if (data) setUserPlan(data as UserPlan);
+  };
+
+  const generatePlanManually = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    setGeneratingPlan(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-plan", {
+        body: {
+          userId: session.user.id,
+          subscriptionId: subscription?.id,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.plan) {
+        setUserPlan(data.plan as UserPlan);
+        setShowPlan(true);
+      }
+    } catch (error) {
+      console.error("Error generating plan:", error);
+    } finally {
+      setGeneratingPlan(false);
+    }
   };
 
   const loadHabits = async (userId: string) => {
@@ -186,6 +271,24 @@ export default function Dashboard() {
     );
   }
 
+  // Show plan view if toggled
+  if (showPlan && userPlan) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container py-8">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-foreground">Mi Plan Personalizado</h1>
+            <Button variant="outline" onClick={() => setShowPlan(false)}>
+              Volver al Dashboard
+            </Button>
+          </div>
+          <PlanView plan={userPlan} />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -208,6 +311,57 @@ export default function Dashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Personal Plan Card */}
+          {subscription && (
+            <Card className="border-0 shadow-card lg:col-span-3 overflow-hidden">
+              <div className="h-2 gradient-primary" />
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center">
+                      <BookOpen className="w-7 h-7 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">
+                        {userPlan ? userPlan.plan_content.title : "Tu Plan Personalizado"}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        {userPlan 
+                          ? `Generado el ${format(new Date(userPlan.created_at), "d 'de' MMMM, yyyy", { locale: es })}`
+                          : "Plan basado en tu perfil diagnóstico"
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  {userPlan ? (
+                    <Button onClick={() => setShowPlan(true)} className="shadow-button">
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Ver mi plan completo
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={generatePlanManually} 
+                      disabled={generatingPlan}
+                      className="shadow-button"
+                    >
+                      {generatingPlan ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Generando plan...
+                        </>
+                      ) : (
+                        <>
+                          <Target className="w-4 h-4 mr-2" />
+                          Generar mi plan
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Plan Status Card */}
           <Card className="border-0 shadow-card lg:col-span-2">
             <CardHeader className="flex flex-row items-center gap-3 pb-2">

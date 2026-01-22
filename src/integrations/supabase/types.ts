@@ -137,6 +137,89 @@ export type Database = {
         }
         Relationships: []
       }
+      test_answers: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          main_factors: Json | null
+          profile_scores: Json | null
+          risk_level: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers: Json
+          created_at?: string
+          id?: string
+          main_factors?: Json | null
+          profile_scores?: Json | null
+          risk_level?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          main_factors?: Json | null
+          profile_scores?: Json | null
+          risk_level?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_plans: {
+        Row: {
+          created_at: string
+          habits: Json
+          id: string
+          nutrition_tips: Json | null
+          phases: Json
+          plan_content: Json
+          psychology_tips: Json | null
+          status: string
+          subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          habits: Json
+          id?: string
+          nutrition_tips?: Json | null
+          phases: Json
+          plan_content: Json
+          psychology_tips?: Json | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          habits?: Json
+          id?: string
+          nutrition_tips?: Json | null
+          phases?: Json
+          plan_content?: Json
+          psychology_tips?: Json | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_plans_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
