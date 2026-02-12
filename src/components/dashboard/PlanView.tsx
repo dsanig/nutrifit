@@ -19,7 +19,9 @@ import {
   Clock,
   ArrowRight,
   Sparkles,
+  Download,
 } from "lucide-react";
+import { downloadPlanAsHtml } from "@/lib/generatePlanHtml";
 
 interface Phase {
   phase: number;
@@ -71,9 +73,10 @@ interface UserPlan {
 
 interface PlanViewProps {
   plan: UserPlan;
+  userName?: string;
 }
 
-export function PlanView({ plan }: PlanViewProps) {
+export function PlanView({ plan, userName = "Usuario" }: PlanViewProps) {
   const [currentPhase, setCurrentPhase] = useState(0);
 
   const getPriorityBadge = (priority: string) => {
@@ -104,7 +107,7 @@ export function PlanView({ plan }: PlanViewProps) {
               <p className="text-muted-foreground text-sm mb-3">
                 {plan.plan_content.summary}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 <Badge variant="secondary">
                   <Clock className="w-3 h-3 mr-1" />
                   {plan.plan_content.estimatedDuration}
@@ -112,6 +115,15 @@ export function PlanView({ plan }: PlanViewProps) {
                 <Badge variant="outline">
                   Dificultad: {plan.plan_content.difficulty}
                 </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => downloadPlanAsHtml(plan, userName)}
+                  className="ml-auto"
+                >
+                  <Download className="w-4 h-4 mr-1" />
+                  Descargar HTML
+                </Button>
               </div>
             </div>
           </div>

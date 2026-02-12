@@ -283,7 +283,7 @@ export default function Dashboard() {
               Volver al Dashboard
             </Button>
           </div>
-          <PlanView plan={userPlan} />
+          <PlanView plan={userPlan} userName={profile?.full_name || "Usuario"} />
         </main>
       </div>
     );
