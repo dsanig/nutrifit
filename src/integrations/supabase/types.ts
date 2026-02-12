@@ -175,6 +175,7 @@ export type Database = {
           created_at: string
           habits: Json
           id: string
+          meal_plan: Json | null
           nutrition_tips: Json | null
           phases: Json
           plan_content: Json
@@ -188,6 +189,7 @@ export type Database = {
           created_at?: string
           habits: Json
           id?: string
+          meal_plan?: Json | null
           nutrition_tips?: Json | null
           phases: Json
           plan_content: Json
@@ -201,6 +203,7 @@ export type Database = {
           created_at?: string
           habits?: Json
           id?: string
+          meal_plan?: Json | null
           nutrition_tips?: Json | null
           phases?: Json
           plan_content?: Json

@@ -60,6 +60,16 @@ interface GeneratedPlan {
     description: string;
     technique: string;
   }>;
+  mealPlan: Array<{
+    week: number;
+    weekLabel: string;
+    days: Array<{
+      day: string;
+      breakfast: string;
+      lunch: string;
+      dinner: string;
+    }>;
+  }>;
 }
 
 const logStep = (step: string, details?: unknown) => {
@@ -142,7 +152,24 @@ IMPORTANTE:
 - Genera exactamente 8 hábitos personalizados
 - Genera 4-5 consejos nutricionales
 - Genera 3-4 técnicas psicológicas
-- TODO debe estar adaptado a los factores identificados del usuario`;
+- Genera un plan de comidas para TODAS las semanas del plan (si el plan dura 12 semanas, genera 12 semanas de menú)
+- Cada semana tiene 7 días (Lunes a Domingo) con desayuno, comida y cena
+- Solo indica nombres de platos o ingredientes principales, SIN cantidades ni gramajes
+- Los platos deben ser variados, realistas y adaptados al perfil del usuario
+- TODO debe estar adaptado a los factores identificados del usuario
+
+Añade al JSON este campo adicional:
+"mealPlan": [
+  {
+    "week": 1,
+    "weekLabel": "Semana 1",
+    "days": [
+      { "day": "Lunes", "breakfast": "Tostadas integrales con aguacate y huevo revuelto", "lunch": "Ensalada de pollo con verduras asadas", "dinner": "Merluza al horno con brócoli" },
+      ...
+    ]
+  },
+  ...
+]`;
 
   logStep("Calling Lovable AI Gateway");
   
@@ -165,7 +192,7 @@ IMPORTANTE:
         }
       ],
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: 16000,
     }),
   });
 
@@ -268,6 +295,7 @@ serve(async (req) => {
         habits: plan.habits,
         nutrition_tips: plan.nutritionTips,
         psychology_tips: plan.psychologyTips,
+        meal_plan: plan.mealPlan,
         status: "active",
       })
       .select()

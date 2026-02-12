@@ -20,6 +20,10 @@ import {
   ArrowRight,
   Sparkles,
   Download,
+  CalendarDays,
+  Coffee,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { downloadPlanAsHtml } from "@/lib/generatePlanHtml";
 
@@ -55,6 +59,19 @@ interface PsychologyTip {
   technique: string;
 }
 
+interface MealDay {
+  day: string;
+  breakfast: string;
+  lunch: string;
+  dinner: string;
+}
+
+interface MealWeek {
+  week: number;
+  weekLabel: string;
+  days: MealDay[];
+}
+
 interface UserPlan {
   id: string;
   plan_content: {
@@ -67,6 +84,7 @@ interface UserPlan {
   habits: Habit[];
   nutrition_tips: NutritionTip[];
   psychology_tips: PsychologyTip[];
+  meal_plan: MealWeek[] | null;
   status: string;
   created_at: string;
 }
@@ -78,6 +96,7 @@ interface PlanViewProps {
 
 export function PlanView({ plan, userName = "Usuario" }: PlanViewProps) {
   const [currentPhase, setCurrentPhase] = useState(0);
+  const [selectedWeek, setSelectedWeek] = useState(0);
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
@@ -132,10 +151,14 @@ export function PlanView({ plan, userName = "Usuario" }: PlanViewProps) {
 
       {/* Tabs for different sections */}
       <Tabs defaultValue="phases" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-4">
+        <TabsList className="grid w-full grid-cols-5 mb-4">
           <TabsTrigger value="phases" className="text-xs sm:text-sm">
             <Target className="w-4 h-4 mr-1 hidden sm:inline" />
             Fases
+          </TabsTrigger>
+          <TabsTrigger value="meals" className="text-xs sm:text-sm">
+            <CalendarDays className="w-4 h-4 mr-1 hidden sm:inline" />
+            Menú
           </TabsTrigger>
           <TabsTrigger value="habits" className="text-xs sm:text-sm">
             <Zap className="w-4 h-4 mr-1 hidden sm:inline" />
@@ -222,6 +245,72 @@ export function PlanView({ plan, userName = "Usuario" }: PlanViewProps) {
                     ))}
                   </ul>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Meal Plan Tab */}
+        <TabsContent value="meals" className="space-y-4">
+          {plan.meal_plan && plan.meal_plan.length > 0 ? (
+            <>
+              <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                {plan.meal_plan.map((week, index) => (
+                  <Button
+                    key={week.week}
+                    variant={selectedWeek === index ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedWeek(index)}
+                    className="flex-shrink-0"
+                  >
+                    {week.weekLabel}
+                  </Button>
+                ))}
+              </div>
+
+              {plan.meal_plan[selectedWeek] && (
+                <div className="space-y-3">
+                  {plan.meal_plan[selectedWeek].days.map((day) => (
+                    <Card key={day.day} className="border-0 shadow-card">
+                      <CardContent className="p-4">
+                        <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <CalendarDays className="w-4 h-4 text-primary" />
+                          {day.day}
+                        </h4>
+                        <div className="grid gap-2">
+                          <div className="flex items-start gap-3 bg-muted/30 rounded-lg p-3">
+                            <Coffee className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground uppercase">Desayuno</span>
+                              <p className="text-sm text-foreground">{day.breakfast}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3 bg-muted/30 rounded-lg p-3">
+                            <Sun className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground uppercase">Comida</span>
+                              <p className="text-sm text-foreground">{day.lunch}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3 bg-muted/30 rounded-lg p-3">
+                            <Moon className="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground uppercase">Cena</span>
+                              <p className="text-sm text-foreground">{day.dinner}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <Card className="border-0 shadow-card">
+              <CardContent className="p-6 text-center text-muted-foreground">
+                <Utensils className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>El plan de comidas no está disponible aún. Genera un nuevo plan para incluirlo.</p>
               </CardContent>
             </Card>
           )}

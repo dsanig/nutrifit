@@ -82,6 +82,16 @@ interface UserPlan {
     description: string;
     technique: string;
   }>;
+  meal_plan: Array<{
+    week: number;
+    weekLabel: string;
+    days: Array<{
+      day: string;
+      breakfast: string;
+      lunch: string;
+      dinner: string;
+    }>;
+  }> | null;
   status: string;
   created_at: string;
 }
