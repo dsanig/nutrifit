@@ -115,14 +115,16 @@ export default function Login() {
                 {!isLogin && (
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre completo</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="Tu nombre"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="Tu nombre"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
                 )}
 
