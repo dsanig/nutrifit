@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Scale, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Scale, Mail, Lock, ArrowRight, Loader2, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -116,12 +116,14 @@ export default function Login() {
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre completo</Label>
                     <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="name"
                         type="text"
                         placeholder="Tu nombre"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        className="pl-10"
                         required
                       />
                     </div>
