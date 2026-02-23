@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { PlanView } from "@/components/dashboard/PlanView";
+import { PlanGeneratingLoader } from "@/components/dashboard/PlanGeneratingLoader";
 import { 
   User, 
   Calendar, 
@@ -322,7 +323,7 @@ export default function Dashboard() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Personal Plan Card */}
-          {subscription && (
+          {subscription && !generatingPlan && (
             <Card className="border-0 shadow-card lg:col-span-3 overflow-hidden">
               <div className="h-2 gradient-primary" />
               <CardContent className="p-6">
@@ -351,26 +352,18 @@ export default function Dashboard() {
                   ) : (
                     <Button 
                       onClick={generatePlanManually} 
-                      disabled={generatingPlan}
                       className="shadow-button"
                     >
-                      {generatingPlan ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Generando plan...
-                        </>
-                      ) : (
-                        <>
-                          <Target className="w-4 h-4 mr-2" />
-                          Generar mi plan
-                        </>
-                      )}
+                      <Target className="w-4 h-4 mr-2" />
+                      Generar mi plan
                     </Button>
                   )}
                 </div>
               </CardContent>
             </Card>
           )}
+
+          {generatingPlan && <PlanGeneratingLoader />}
 
           {/* Plan Status Card */}
           <Card className="border-0 shadow-card lg:col-span-2">
