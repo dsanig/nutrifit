@@ -21,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    const { planId, planName, email, name, duration, includeAddOn, addOnQuantity } = await req.json();
+    const { planId, planName, email, name, duration, includeAddOn, addOnQuantity, promoCode } = await req.json();
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -65,7 +65,8 @@ serve(async (req) => {
       });
     }
 
-    const session = await stripe.checkout.sessions.create({
+    // Build session params
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -80,7 +81,22 @@ serve(async (req) => {
         name,
         addOnIncluded: includeAddOn ? "true" : "false",
       },
-    });
+    };
+
+    // If promo code provided, look it up and apply; otherwise allow manual entry
+    if (promoCode && promoCode.trim()) {
+      const promoCodes = await stripe.promotionCodes.list({ code: promoCode.trim(), active: true, limit: 1 });
+      if (promoCodes.data.length > 0) {
+        sessionParams.discounts = [{ promotion_code: promoCodes.data[0].id }];
+      } else {
+        // Let Stripe show the promo field so user can retry
+        sessionParams.allow_promotion_codes = true;
+      }
+    } else {
+      sessionParams.allow_promotion_codes = true;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     console.log("Checkout session created successfully:", session.id);
 
