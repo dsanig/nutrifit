@@ -364,6 +364,55 @@ export const questions: Question[] = [
       { value: 5, label: 'No me lo he planteado', score: 5 },
     ],
   },
+
+  // Intolerancias y preferencias alimentarias (31-33)
+  {
+    id: 31,
+    category: 'preferencias_alimentarias',
+    text: '¿Tienes alguna intolerancia o alergia alimentaria?',
+    type: 'multi',
+    options: [
+      { value: 'ninguna', label: 'Ninguna' },
+      { value: 'gluten', label: 'Gluten / Celiaquía' },
+      { value: 'lactosa', label: 'Lactosa' },
+      { value: 'frutos_secos', label: 'Frutos secos' },
+      { value: 'huevo', label: 'Huevo' },
+      { value: 'marisco', label: 'Marisco / Pescado' },
+      { value: 'soja', label: 'Soja' },
+      { value: 'otra_intolerancia', label: 'Otra intolerancia' },
+    ],
+    helperText: 'Selecciona todas las que apliquen',
+  },
+  {
+    id: 32,
+    category: 'preferencias_alimentarias',
+    text: '¿Sigues algún tipo de dieta o patrón alimentario específico?',
+    type: 'single',
+    options: [
+      { value: 'omnivoro', label: 'Omnívoro (como de todo)', score: 1 },
+      { value: 'flexitariano', label: 'Flexitariano (reduzco carne)', score: 1 },
+      { value: 'vegetariano', label: 'Vegetariano', score: 1 },
+      { value: 'vegano', label: 'Vegano', score: 1 },
+      { value: 'pescetariano', label: 'Pescetariano', score: 1 },
+      { value: 'mediterraneo', label: 'Dieta mediterránea', score: 1 },
+    ],
+  },
+  {
+    id: 33,
+    category: 'preferencias_alimentarias',
+    text: '¿Hay alimentos que no te gustan o prefieres evitar?',
+    type: 'multi',
+    options: [
+      { value: 'ninguno', label: 'Como de todo, sin preferencias especiales' },
+      { value: 'carne_roja', label: 'Carne roja' },
+      { value: 'pescado', label: 'Pescado' },
+      { value: 'verduras_verdes', label: 'Verduras de hoja verde' },
+      { value: 'legumbres', label: 'Legumbres' },
+      { value: 'picante', label: 'Comida picante' },
+      { value: 'visceras', label: 'Vísceras / Casquería' },
+    ],
+    helperText: 'Selecciona los que prefieras evitar en tu plan',
+  },
 ];
 
 export const categories = {
@@ -406,5 +455,9 @@ export const categories = {
   factores_medicos: {
     name: 'Factores Médicos',
     description: 'Condiciones de salud relevantes',
+  },
+  preferencias_alimentarias: {
+    name: 'Preferencias Alimentarias',
+    description: 'Intolerancias, alergias y preferencias de dieta',
   },
 };
