@@ -83,7 +83,7 @@ export default function Pricing() {
     return ADD_ON_BASE_PRICE * selectedPlan.durationMonths;
   }, [selectedPlan]);
   
-  const totalPrice = selectedPlan ? selectedPlan.price + (addOnSelected ? addOnPrice : 0) : 0;
+  const totalPrice = selectedPlan ? Math.round((selectedPlan.price + (addOnSelected ? addOnPrice : 0)) * 100) / 100 : 0;
 
   const handleSelectPlan = (planId: string) => {
     setSelectedPlanId(planId);
