@@ -334,6 +334,7 @@ function getCategoryLabel(category: string): string {
     alcohol_liquidas: "Calorías Líquidas",
     adherencia: "Adherencia",
     factores_medicos: "Factores Médicos",
+    preferencias_alimentarias: "Preferencias Alimentarias",
   };
   return labels[category] || category;
 }

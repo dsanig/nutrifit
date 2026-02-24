@@ -23,6 +23,11 @@ interface TestAnswers {
     name: string;
     score: number;
   }>;
+  foodPreferences?: {
+    intolerances: string[];
+    dietType: string;
+    dislikedFoods: string[];
+  };
 }
 
 interface GeneratedPlan {
@@ -82,6 +87,37 @@ async function generatePlanWithAI(testData: TestAnswers, userName: string): Prom
     .map((f, i) => `${i + 1}. ${f.name} (puntuación: ${f.score}/100)`)
     .join("\n");
 
+  // Extract food preferences
+  const fp = testData.foodPreferences;
+  let foodPreferencesText = "";
+  if (fp) {
+    const parts: string[] = [];
+    if (fp.intolerances.length > 0 && !fp.intolerances.includes("ninguna")) {
+      const intoleranceLabels: Record<string, string> = {
+        gluten: "Gluten/Celiaquía", lactosa: "Lactosa", frutos_secos: "Frutos secos",
+        huevo: "Huevo", marisco: "Marisco/Pescado", soja: "Soja", otra_intolerancia: "Otra intolerancia",
+      };
+      parts.push(`- Intolerancias/alergias: ${fp.intolerances.map(i => intoleranceLabels[i] || i).join(", ")}`);
+    }
+    if (fp.dietType) {
+      const dietLabels: Record<string, string> = {
+        omnivoro: "Omnívoro", flexitariano: "Flexitariano", vegetariano: "Vegetariano",
+        vegano: "Vegano", pescetariano: "Pescetariano", mediterraneo: "Dieta mediterránea",
+      };
+      parts.push(`- Patrón alimentario: ${dietLabels[fp.dietType] || fp.dietType}`);
+    }
+    if (fp.dislikedFoods.length > 0 && !fp.dislikedFoods.includes("ninguno")) {
+      const foodLabels: Record<string, string> = {
+        carne_roja: "Carne roja", pescado: "Pescado", verduras_verdes: "Verduras de hoja verde",
+        legumbres: "Legumbres", picante: "Comida picante", visceras: "Vísceras/Casquería",
+      };
+      parts.push(`- Alimentos a evitar: ${fp.dislikedFoods.map(f => foodLabels[f] || f).join(", ")}`);
+    }
+    if (parts.length > 0) {
+      foodPreferencesText = `\n\n## PREFERENCIAS ALIMENTARIAS:\n${parts.join("\n")}`;
+    }
+  }
+
   const prompt = `Eres un experto en nutrición, psicología conductual y pérdida de peso sostenible. 
 Genera un plan personalizado de pérdida de peso para "${userName}" basado en su perfil diagnóstico.
 
@@ -92,6 +128,7 @@ ${mainFactorsText}
 
 ## PUNTUACIONES POR CATEGORÍA:
 ${testData.profileScores.map(s => `- ${s.name}: ${s.score}/100 (nivel ${s.level})`).join("\n")}
+${foodPreferencesText}
 
 ## INSTRUCCIONES:
 Genera un plan COMPLETAMENTE PERSONALIZADO que:
@@ -100,6 +137,10 @@ Genera un plan COMPLETAMENTE PERSONALIZADO que:
 3. Use técnicas de psicología conductual
 4. Incluya hábitos pequeños y manejables
 5. Esté en ESPAÑOL de España
+6. RESPETE ESTRICTAMENTE las intolerancias, alergias y preferencias alimentarias del usuario
+7. NO incluya NUNCA alimentos a los que el usuario sea intolerante o alérgico
+8. Adapte todas las recetas al patrón alimentario indicado (vegano, vegetariano, etc.)
+9. Evite los alimentos que el usuario ha indicado que no le gustan y sustitúyalos por alternativas
 
 ## FORMATO DE RESPUESTA (JSON):
 {
@@ -254,8 +295,19 @@ serve(async (req) => {
     // Get or use provided test answers
     let testData: TestAnswers;
     
+    // Helper to extract food preferences from raw answers
+    const extractFoodPreferences = (answers: Record<string, unknown>) => {
+      const intolerances = (answers[31] as string[]) || [];
+      const dietType = (answers[32] as string) || "omnivoro";
+      const dislikedFoods = (answers[33] as string[]) || [];
+      return { intolerances, dietType, dislikedFoods };
+    };
+
     if (testAnswers) {
-      testData = testAnswers;
+      testData = {
+        ...testAnswers,
+        foodPreferences: testAnswers.foodPreferences || extractFoodPreferences(testAnswers.answers as Record<string, unknown>),
+      };
     } else {
       // Fetch from database
       const { data: storedAnswers } = await supabaseClient
@@ -270,11 +322,13 @@ serve(async (req) => {
         throw new Error("No test answers found for user");
       }
 
+      const rawAnswers = storedAnswers.answers as Record<string, unknown>;
       testData = {
-        answers: storedAnswers.answers,
+        answers: rawAnswers,
         profileScores: storedAnswers.profile_scores || [],
         riskLevel: storedAnswers.risk_level || "medio",
         mainFactors: storedAnswers.main_factors || [],
+        foodPreferences: extractFoodPreferences(rawAnswers),
       };
     }
 
