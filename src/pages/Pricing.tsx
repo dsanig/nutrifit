@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, Star, Zap, ArrowRight, Mail, UserRound, Loader2 } from "lucide-react";
+import { Check, Star, Zap, ArrowRight, Mail, UserRound, Loader2, Tag } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -69,6 +69,7 @@ export default function Pricing() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [promoCode, setPromoCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const summaryRef = useRef<HTMLDivElement | null>(null);
 
@@ -155,6 +156,7 @@ export default function Pricing() {
           duration: selectedPlan.duration,
           includeAddOn: addOnSelected,
           addOnQuantity: selectedPlan.durationMonths,
+          promoCode: promoCode.trim() || undefined,
         },
       });
 
@@ -470,7 +472,21 @@ export default function Pricing() {
                       <span>Total</span>
                       <span>{totalPrice}€</span>
                     </div>
-                  </div>
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="promo-code" className="flex items-center gap-2 text-sm font-medium">
+                        <Tag className="w-4 h-4" />
+                        Código de descuento (opcional)
+                      </Label>
+                      <Input
+                        id="promo-code"
+                        type="text"
+                        placeholder="Introduce tu código"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                      />
+                    </div>
 
                   <div className="rounded-lg border border-accent/40 bg-accent/10 p-4 text-sm text-foreground">
                     <p className="font-semibold mb-2">Si no completas la compra</p>
