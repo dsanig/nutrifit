@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/landing/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -172,20 +173,45 @@ export default function Dashboard() {
 
     setGeneratingPlan(true);
     try {
+      // Build testAnswers from localStorage as fallback for DB
+      let testAnswers: Record<string, unknown> | undefined;
+      const answersJson = localStorage.getItem("testAnswers");
+      const profileJson = localStorage.getItem("testProfile");
+      if (answersJson && profileJson) {
+        const answers = JSON.parse(answersJson);
+        const profile = JSON.parse(profileJson);
+        testAnswers = {
+          answers,
+          profileScores: profile.scores,
+          riskLevel: profile.riskLevel,
+          mainFactors: profile.mainFactors,
+        };
+      }
+
       const { data, error } = await supabase.functions.invoke("generate-plan", {
         body: {
           userId: session.user.id,
           subscriptionId: subscription?.id,
+          testAnswers,
         },
       });
 
       if (error) throw error;
+      if (data?.error) {
+        throw new Error(data.error);
+      }
       if (data?.plan) {
         setUserPlan(data.plan as UserPlan);
         setShowPlan(true);
       }
     } catch (error) {
       console.error("Error generating plan:", error);
+      const msg = error instanceof Error ? error.message : "Error desconocido";
+      if (msg.includes("No test answers")) {
+        toast.error("No se encontraron respuestas del test. Por favor, realiza el test primero.");
+      } else {
+        toast.error("Error al generar el plan. Inténtalo de nuevo.");
+      }
     } finally {
       setGeneratingPlan(false);
     }
