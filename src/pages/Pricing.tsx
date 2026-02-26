@@ -94,6 +94,30 @@ export default function Pricing() {
     }
   };
 
+  const saveTestAnswersToDb = async (userId: string) => {
+    try {
+      const answersJson = localStorage.getItem("testAnswers");
+      const profileJson = localStorage.getItem("testProfile");
+      if (!answersJson || !profileJson) return;
+
+      const answers = JSON.parse(answersJson);
+      const profile = JSON.parse(profileJson);
+
+      // Delete old answers first, then insert new ones
+      await supabase.from("test_answers").delete().eq("user_id", userId);
+      await supabase.from("test_answers").insert({
+        user_id: userId,
+        answers,
+        profile_scores: profile.scores,
+        risk_level: profile.riskLevel,
+        main_factors: profile.mainFactors,
+      });
+      console.log("Test answers saved to DB for user", userId);
+    } catch (err) {
+      console.error("Error saving test answers to DB:", err);
+    }
+  };
+
   const handleCreateAccount = async () => {
     if (!email || !name || !selectedPlan) return;
     
@@ -106,7 +130,7 @@ export default function Pricing() {
     setIsLoading(true);
     try {
       // Create Supabase account
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -116,7 +140,6 @@ export default function Pricing() {
       });
 
       if (error) {
-        // Handle specific error types
         if (error.message.includes("User already registered")) {
           toast.error("Este email ya está registrado. Prueba a iniciar sesión.");
           return;
@@ -130,6 +153,11 @@ export default function Pricing() {
           return;
         }
         throw error;
+      }
+
+      // Save test answers to DB immediately after account creation
+      if (signUpData?.user?.id) {
+        await saveTestAnswersToDb(signUpData.user.id);
       }
       
       setCheckoutStep("checkout");
@@ -147,6 +175,12 @@ export default function Pricing() {
     
     setIsLoading(true);
     try {
+      // Ensure test answers are saved to DB for logged-in user
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await saveTestAnswersToDb(session.user.id);
+      }
+
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
           planId: selectedPlan.id,
