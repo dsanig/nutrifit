@@ -134,7 +134,7 @@ export default function Pricing() {
         email,
         password,
         options: {
-          data: { name },
+          data: { full_name: name },
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       });
