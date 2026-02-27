@@ -37,9 +37,7 @@ export default function Login() {
           email,
           password,
           options: {
-            data: {
-              full_name: name,
-            },
+            data: { full_name: name },
           },
         });
 

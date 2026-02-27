@@ -1,10 +1,62 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Scale, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Scale, Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ email: string; fullName: string | null } | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const meta = session.user.user_metadata;
+        setUser({
+          email: session.user.email || "",
+          fullName: meta?.full_name || meta?.name || null,
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const meta = session.user.user_metadata;
+        setUser({
+          email: session.user.email || "",
+          fullName: meta?.full_name || meta?.name || null,
+        });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    navigate("/");
+  };
+
+  const getInitials = () => {
+    if (user?.fullName) {
+      return user.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+    }
+    return user?.email?.[0]?.toUpperCase() || "U";
+  };
+
+  const displayName = user?.fullName || user?.email || "";
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border safe-area-top">
@@ -28,18 +80,46 @@ export function Header() {
             </Link>
           </nav>
 
-          {/* Desktop CTA */}
+          {/* Desktop CTA / User Menu */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="sm">
-                Iniciar sesión
-              </Button>
-            </Link>
-            <Link to="/test">
-              <Button size="sm">
-                Empezar test
-              </Button>
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 px-2">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium max-w-[150px] truncate">{displayName}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    Mi cuenta
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Cerrar sesión
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">
+                    Iniciar sesión
+                  </Button>
+                </Link>
+                <Link to="/test">
+                  <Button size="sm">
+                    Empezar test
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -71,16 +151,45 @@ export function Header() {
                 FAQ
               </Link>
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    Iniciar sesión
-                  </Button>
-                </Link>
-                <Link to="/test" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="w-full">
-                    Empezar test
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <div className="flex items-center gap-2 px-2 py-2">
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium truncate">{displayName}</span>
+                    </div>
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="outline" className="w-full justify-start">
+                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                        Mi cuenta
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-destructive" 
+                      onClick={() => { handleLogout(); setIsMenuOpen(false); }}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Cerrar sesión
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="outline" className="w-full">
+                        Iniciar sesión
+                      </Button>
+                    </Link>
+                    <Link to="/test" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="w-full">
+                        Empezar test
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </div>
