@@ -17,6 +17,21 @@ export function Header() {
   const [user, setUser] = useState<{ email: string; fullName: string | null } | null>(null);
   const navigate = useNavigate();
 
+  const scrollToSection = (id: string) => {
+    // If we're on the home page, scroll directly
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // Navigate home then scroll
+      navigate("/");
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+    setIsMenuOpen(false);
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
@@ -72,12 +87,12 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={() => scrollToSection("how-it-works")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Cómo funciona
-            </Link>
-            <Link to="/#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            </button>
+            <button onClick={() => scrollToSection("faq")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               FAQ
-            </Link>
+            </button>
           </nav>
 
           {/* Desktop CTA / User Menu */}
@@ -136,20 +151,18 @@ export function Header() {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <nav className="flex flex-col gap-3">
-              <Link 
-                to="/#how-it-works" 
-                className="text-foreground py-2"
-                onClick={() => setIsMenuOpen(false)}
+              <button 
+                onClick={() => scrollToSection("how-it-works")}
+                className="text-foreground py-2 text-left"
               >
                 Cómo funciona
-              </Link>
-              <Link 
-                to="/#faq" 
-                className="text-foreground py-2"
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button 
+                onClick={() => scrollToSection("faq")}
+                className="text-foreground py-2 text-left"
               >
                 FAQ
-              </Link>
+              </button>
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 {user ? (
                   <>
