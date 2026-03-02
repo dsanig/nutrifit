@@ -281,11 +281,16 @@ function TimelinePhase({
 
 // Helper functions
 function calculateProfile(answers: Record<number, any>): Profile {
+  // Categories that are informational only, not risk indicators
+  const informationalCategories = ["preferencias_alimentarias"];
+  
   const categoryScores: Record<string, number[]> = {};
 
   questions.forEach((q) => {
     const answer = answers[q.id];
     if (answer === undefined) return;
+    // Skip informational categories from scoring
+    if (informationalCategories.includes(q.category)) return;
 
     if (!categoryScores[q.category]) {
       categoryScores[q.category] = [];
@@ -293,11 +298,13 @@ function calculateProfile(answers: Record<number, any>): Profile {
 
     if (q.type === "multi") {
       const multiAnswer = answer as string[];
-      const score = multiAnswer.includes("ninguna") ? 1 : Math.min(5, multiAnswer.length + 1);
+      // For medical factors: "ninguna" = low risk, more selections = higher risk
+      const hasNone = multiAnswer.some(v => v === "ninguna" || v === "ninguno");
+      const score = hasNone ? 1 : Math.min(5, multiAnswer.length + 1);
       categoryScores[q.category].push(score);
     } else {
       const option = q.options?.find((o) => o.value === answer);
-      if (option?.score) {
+      if (option?.score !== undefined) {
         categoryScores[q.category].push(option.score);
       }
     }
