@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, Star, Zap, ArrowRight, Mail, UserRound, Loader2, Tag } from "lucide-react";
+import { Check, Star, Zap, ArrowRight, Mail, UserRound, Loader2, Tag, Heart } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -61,10 +61,12 @@ const plans = [
 ];
 
 const ADD_ON_BASE_PRICE = 25; // €25 per month
+const VAGUS_BASE_PRICE = 12.50; // €12.50 per month
 
 export default function Pricing() {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [addOnSelected, setAddOnSelected] = useState(false);
+  const [vagusSelected, setVagusSelected] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<"idle" | "email" | "account" | "checkout">("idle");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -81,10 +83,17 @@ export default function Pricing() {
   // Calculate add-on price based on plan duration (€25 per month)
   const addOnPrice = useMemo(() => {
     if (!selectedPlan) return 0;
-    return ADD_ON_BASE_PRICE * selectedPlan.durationMonths;
+    return Math.round(ADD_ON_BASE_PRICE * selectedPlan.durationMonths * 100) / 100;
+  }, [selectedPlan]);
+
+  // Calculate vagus reset price based on plan duration (€12.50 per month, prorated for 7 days)
+  const vagusPrice = useMemo(() => {
+    if (!selectedPlan) return 0;
+    if (selectedPlan.id === "prueba") return Math.round(VAGUS_BASE_PRICE * (7 / 30) * 100) / 100;
+    return Math.round(VAGUS_BASE_PRICE * selectedPlan.durationMonths * 100) / 100;
   }, [selectedPlan]);
   
-  const totalPrice = selectedPlan ? Math.round((selectedPlan.price + (addOnSelected ? addOnPrice : 0)) * 100) / 100 : 0;
+  const totalPrice = selectedPlan ? Math.round((selectedPlan.price + (addOnSelected ? addOnPrice : 0) + (vagusSelected ? vagusPrice : 0)) * 100) / 100 : 0;
 
   const handleSelectPlan = (planId: string) => {
     setSelectedPlanId(planId);
@@ -190,6 +199,8 @@ export default function Pricing() {
           duration: selectedPlan.duration,
           includeAddOn: addOnSelected,
           addOnQuantity: selectedPlan.durationMonths,
+          includeVagusReset: vagusSelected,
+          vagusResetQuantity: selectedPlan.durationMonths,
           promoCode: promoCode.trim() || undefined,
         },
       });
@@ -318,6 +329,14 @@ export default function Pricing() {
                         </span>
                       </div>
                     )}
+                    {vagusSelected && (
+                      <div className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-emerald-500 mt-0.5" />
+                        <span className="text-sm text-foreground">
+                          Reset del Nervio Vago (programa de 30 días)
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="rounded-lg border border-border bg-background p-4">
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -327,6 +346,10 @@ export default function Pricing() {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>Seguimiento Inteligente</span>
                       <span>{addOnSelected ? `+${addOnPrice}€` : "No añadido"}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Reset Nervio Vago</span>
+                      <span>{vagusSelected ? `+${vagusPrice}€` : "No añadido"}</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between text-base font-semibold text-foreground">
                       <span>Total estimado</span>
@@ -383,6 +406,58 @@ export default function Pricing() {
                       disabled={!selectedPlan}
                     >
                       {addOnSelected ? "Quitar del plan" : "Añadir al plan"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Vagus Reset Add-on */}
+          <Card className="border-2 border-emerald-500/50 bg-emerald-500/5 mb-8">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row items-start gap-6">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                  <Heart className="w-7 h-7 text-emerald-500" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold text-foreground">
+                      Reset del Nervio Vago
+                    </h3>
+                    <span className="text-xs font-medium bg-emerald-500/20 text-emerald-600 px-2 py-1 rounded-full">
+                      Nuevo
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground mb-4">
+                    Programa de 30 días con ejercicios diarios para resetear tu nervio vago. 
+                    Mejora tu digestión, sueño, estrés y bienestar general.
+                  </p>
+                  
+                  <div className="flex flex-wrap gap-4 mb-4">
+                    <Feature text="30 ejercicios guiados" />
+                    <Feature text="Técnicas de respiración" />
+                    <Feature text="Nutrición específica" />
+                    <Feature text="Neuroplasticidad" />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-2xl font-bold text-foreground">12,50€</span>
+                      <span className="text-muted-foreground">/mes</span>
+                      {selectedPlan && (
+                        <span className="block text-sm text-muted-foreground">
+                          ({vagusPrice}€ para {selectedPlan.duration})
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white"
+                      onClick={() => setVagusSelected((prev) => !prev)}
+                      disabled={!selectedPlan}
+                    >
+                      {vagusSelected ? "Quitar del plan" : "Añadir al plan"}
                     </Button>
                   </div>
                 </div>
@@ -501,6 +576,10 @@ export default function Pricing() {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>Seguimiento Inteligente</span>
                       <span>{addOnSelected ? `+${addOnPrice}€` : "No añadido"}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Reset Nervio Vago</span>
+                      <span>{vagusSelected ? `+${vagusPrice}€` : "No añadido"}</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between text-base font-semibold text-foreground">
                       <span>Total</span>

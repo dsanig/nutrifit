@@ -104,6 +104,7 @@ export type Database = {
           end_date: string | null
           id: string
           includes_addon: boolean | null
+          includes_vagus_reset: boolean | null
           plan_id: string
           plan_name: string
           start_date: string
@@ -116,6 +117,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           includes_addon?: boolean | null
+          includes_vagus_reset?: boolean | null
           plan_id: string
           plan_name: string
           start_date?: string
@@ -128,6 +130,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           includes_addon?: boolean | null
+          includes_vagus_reset?: boolean | null
           plan_id?: string
           plan_name?: string
           start_date?: string

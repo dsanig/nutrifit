@@ -1,0 +1,1 @@
+ALTER TABLE public.subscriptions ADD COLUMN includes_vagus_reset boolean DEFAULT false;

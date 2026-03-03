@@ -14,6 +14,7 @@ const PRICE_IDS: Record<string, string> = {
 };
 
 const ADDON_PRICE_ID = "price_1SrjWUFd344hbed9eCKQY7Em"; // Seguimiento Inteligente - 25€/mes
+const VAGUS_PRICE_ID = "price_1T6lPiFd344hbed9rzOVkUD4"; // Reset Nervio Vago - 12.50€/mes
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -21,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { planId, planName, email, name, duration, includeAddOn, addOnQuantity, promoCode } = await req.json();
+    const { planId, planName, email, name, duration, includeAddOn, addOnQuantity, includeVagusReset, vagusResetQuantity, promoCode } = await req.json();
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -65,6 +66,27 @@ serve(async (req) => {
       });
     }
 
+    // Add Vagus Reset if included (prorated: 7 days ≈ 0.23 months)
+    if (includeVagusReset) {
+      if (planId === "prueba") {
+        // For 7-day trial, use price_data with prorated amount (12.50 * 7/30 = 2.92€)
+        lineItems.push({
+          price_data: {
+            currency: "eur",
+            product: "prod_U4vGOjFxQAch07",
+            unit_amount: 292,
+          },
+          quantity: 1,
+        });
+      } else {
+        const quantity = vagusResetQuantity || (planId === "trimestral" ? 3 : 1);
+        lineItems.push({
+          price: VAGUS_PRICE_ID,
+          quantity: quantity,
+        });
+      }
+    }
+
     // Build session params
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
@@ -80,6 +102,7 @@ serve(async (req) => {
         email,
         name,
         addOnIncluded: includeAddOn ? "true" : "false",
+        vagusResetIncluded: includeVagusReset ? "true" : "false",
       },
     };
 

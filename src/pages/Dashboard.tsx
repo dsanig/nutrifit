@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { PlanView } from "@/components/dashboard/PlanView";
 import { PlanGeneratingLoader } from "@/components/dashboard/PlanGeneratingLoader";
+import { VagusExercises } from "@/components/dashboard/VagusExercises";
 import { 
   User, 
   Calendar, 
@@ -37,6 +38,7 @@ interface Subscription {
   plan_name: string;
   status: string;
   includes_addon: boolean;
+  includes_vagus_reset: boolean | null;
   start_date: string;
   end_date: string | null;
 }
@@ -107,6 +109,7 @@ export default function Dashboard() {
   const [weekProgress, setWeekProgress] = useState(0);
   const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
   const [showPlan, setShowPlan] = useState(false);
+  const [showVagus, setShowVagus] = useState(false);
   const [generatingPlan, setGeneratingPlan] = useState(false);
 
   useEffect(() => {
@@ -308,6 +311,24 @@ export default function Dashboard() {
     );
   }
 
+  // Show vagus exercises view
+  if (showVagus) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container py-8">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-foreground">Reset del Nervio Vago</h1>
+            <Button variant="outline" onClick={() => setShowVagus(false)}>
+              Volver al Dashboard
+            </Button>
+          </div>
+          <VagusExercises />
+        </main>
+      </div>
+    );
+  }
+
   // Show plan view if toggled
   if (showPlan && userPlan) {
     return (
@@ -389,6 +410,29 @@ export default function Dashboard() {
             </Card>
           )}
 
+          {/* Vagus Reset Card */}
+          {subscription?.includes_vagus_reset && (
+            <Card className="border-0 shadow-card lg:col-span-3 overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-emerald-500 to-teal-500" />
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                      <Activity className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">Reset del Nervio Vago</h2>
+                      <p className="text-sm text-muted-foreground">Programa de 30 días con ejercicios guiados</p>
+                    </div>
+                  </div>
+                  <Button onClick={() => setShowVagus(true)} variant="outline" className="border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white">
+                    Ver ejercicios
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {generatingPlan && <PlanGeneratingLoader />}
 
           {/* Plan Status Card */}
@@ -416,6 +460,11 @@ export default function Dashboard() {
                         {subscription.includes_addon && (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">
                             + Seguimiento IA
+                          </span>
+                        )}
+                        {subscription.includes_vagus_reset && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600">
+                            + Nervio Vago
                           </span>
                         )}
                       </div>

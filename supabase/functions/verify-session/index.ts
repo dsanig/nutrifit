@@ -46,7 +46,7 @@ serve(async (req) => {
       });
     }
 
-    const { email, planId, planName, duration, addOnIncluded } = session.metadata || {};
+    const { email, planId, planName, duration, addOnIncluded, vagusResetIncluded } = session.metadata || {};
     if (!email || !planName) {
       throw new Error("Missing metadata in checkout session");
     }
@@ -120,6 +120,7 @@ serve(async (req) => {
         plan_name: planName,
         status: "active",
         includes_addon: addOnIncluded === "true",
+        includes_vagus_reset: vagusResetIncluded === "true",
         start_date: startDate.toISOString(),
         end_date: endDate.toISOString(),
         stripe_session_id: session.id,
