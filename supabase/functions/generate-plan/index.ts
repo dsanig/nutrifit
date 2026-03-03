@@ -82,7 +82,7 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[GENERATE-PLAN] ${step}${detailsStr}`);
 };
 
-async function generatePlanWithAI(testData: TestAnswers, userName: string): Promise<GeneratedPlan> {
+async function generatePlanWithAI(testData: TestAnswers, userName: string, planDuration: { weeks: number; label: string; phases: number }): Promise<GeneratedPlan> {
   const mainFactorsText = testData.mainFactors
     .map((f, i) => `${i + 1}. ${f.name} (puntuación: ${f.score}/100)`)
     .join("\n");
@@ -147,12 +147,11 @@ Genera un plan COMPLETAMENTE PERSONALIZADO que:
   "planContent": {
     "title": "Título descriptivo del plan",
     "summary": "Resumen de 2-3 frases del enfoque del plan",
-    "estimatedDuration": "12 semanas",
+    "estimatedDuration": "${planDuration.label}",
     "difficulty": "moderado"
   },
   "phases": [
-    {
-      "phase": 1,
+    // Genera exactamente ${planDuration.phases} fases distribuidas en ${planDuration.weeks} semanas
       "title": "Estabilización",
       "duration": "Semanas 1-2",
       "description": "Descripción de la fase",
@@ -189,11 +188,12 @@ Genera un plan COMPLETAMENTE PERSONALIZADO que:
 }
 
 IMPORTANTE:
-- Genera exactamente 3 fases
+- El plan debe durar exactamente ${planDuration.weeks} semanas
+- Genera exactamente ${planDuration.phases} fases distribuidas proporcionalmente en las ${planDuration.weeks} semanas
 - Genera exactamente 8 hábitos personalizados
 - Genera 4-5 consejos nutricionales
 - Genera 3-4 técnicas psicológicas
-- Genera un plan de comidas para TODAS las semanas del plan (si el plan dura 12 semanas, genera 12 semanas de menú)
+- Genera un plan de comidas para TODAS las ${planDuration.weeks} semanas del plan
 - Cada semana tiene 7 días (Lunes a Domingo) con desayuno, comida y cena
 - Solo indica nombres de platos o ingredientes principales, SIN cantidades ni gramajes
 - Los platos deben ser variados, realistas y adaptados al perfil del usuario
@@ -274,7 +274,7 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { userId, subscriptionId, testAnswers } = await req.json();
+    const { userId, subscriptionId, testAnswers, planId } = await req.json();
 
     if (!userId) {
       throw new Error("userId is required");
@@ -334,8 +334,17 @@ serve(async (req) => {
 
     logStep("Test data loaded", { riskLevel: testData.riskLevel });
 
+    // Determine plan duration based on planId
+    const planDurations: Record<string, { weeks: number; label: string; phases: number }> = {
+      prueba: { weeks: 1, label: "1 semana", phases: 1 },
+      mensual: { weeks: 4, label: "4 semanas", phases: 2 },
+      trimestral: { weeks: 12, label: "12 semanas", phases: 3 },
+    };
+    const planDuration = planDurations[planId] || planDurations.mensual;
+    logStep("Plan duration determined", { planId, planDuration });
+
     // Generate the plan using AI
-    const plan = await generatePlanWithAI(testData, userName);
+    const plan = await generatePlanWithAI(testData, userName, planDuration);
     logStep("Plan generated successfully");
 
     // Save to database

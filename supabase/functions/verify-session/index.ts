@@ -147,6 +147,7 @@ serve(async (req) => {
       body: JSON.stringify({
         userId: profile.user_id,
         subscriptionId: subscription.id,
+        planId: planId || "mensual",
       }),
     }).catch((err) => logStep("Plan generation trigger error", String(err)));
 
