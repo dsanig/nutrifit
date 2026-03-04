@@ -66,25 +66,12 @@ serve(async (req) => {
       });
     }
 
-    // Add Vagus Reset if included (prorated: 7 days ≈ 0.23 months)
+    // Add Vagus Reset if included (always 12.50€, 30-day program regardless of plan)
     if (includeVagusReset) {
-      if (planId === "prueba") {
-        // For 7-day trial, use price_data with prorated amount (12.50 * 7/30 = 2.92€)
-        lineItems.push({
-          price_data: {
-            currency: "eur",
-            product: "prod_U4vGOjFxQAch07",
-            unit_amount: 292,
-          },
-          quantity: 1,
-        });
-      } else {
-        const quantity = vagusResetQuantity || (planId === "trimestral" ? 3 : 1);
-        lineItems.push({
-          price: VAGUS_PRICE_ID,
-          quantity: quantity,
-        });
-      }
+      lineItems.push({
+        price: VAGUS_PRICE_ID,
+        quantity: 1,
+      });
     }
 
     // Build session params
