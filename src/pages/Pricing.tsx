@@ -86,12 +86,8 @@ export default function Pricing() {
     return Math.round(ADD_ON_BASE_PRICE * selectedPlan.durationMonths * 100) / 100;
   }, [selectedPlan]);
 
-  // Calculate vagus reset price based on plan duration (€12.50 per month, prorated for 7 days)
-  const vagusPrice = useMemo(() => {
-    if (!selectedPlan) return 0;
-    if (selectedPlan.id === "prueba") return Math.round(VAGUS_BASE_PRICE * (7 / 30) * 100) / 100;
-    return Math.round(VAGUS_BASE_PRICE * selectedPlan.durationMonths * 100) / 100;
-  }, [selectedPlan]);
+  // Vagus Reset is always 12.50€ (30-day program regardless of plan duration)
+  const vagusPrice = VAGUS_BASE_PRICE;
   
   const totalPrice = selectedPlan ? Math.round((selectedPlan.price + (addOnSelected ? addOnPrice : 0) + (vagusSelected ? vagusPrice : 0)) * 100) / 100 : 0;
 
@@ -200,7 +196,7 @@ export default function Pricing() {
           includeAddOn: addOnSelected,
           addOnQuantity: selectedPlan.durationMonths,
           includeVagusReset: vagusSelected,
-          vagusResetQuantity: selectedPlan.durationMonths,
+          vagusResetQuantity: 1,
           promoCode: promoCode.trim() || undefined,
         },
       });
@@ -447,7 +443,7 @@ export default function Pricing() {
                       <span className="text-muted-foreground">/mes</span>
                       {selectedPlan && (
                         <span className="block text-sm text-muted-foreground">
-                          ({vagusPrice}€ para {selectedPlan.duration})
+                          (12,50€ — programa de 30 días)
                         </span>
                       )}
                     </div>
