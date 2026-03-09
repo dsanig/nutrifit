@@ -68,12 +68,26 @@ export default function Pricing() {
   const [addOnSelected, setAddOnSelected] = useState(false);
   const [vagusSelected, setVagusSelected] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<"idle" | "email" | "account" | "checkout">("idle");
+  const [isLoginMode, setIsLoginMode] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const summaryRef = useRef<HTMLDivElement | null>(null);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setEmail(session.user.email || "");
+        setName(session.user.user_metadata?.full_name || "");
+        setCheckoutStep("checkout");
+      }
+    };
+    checkSession();
+  }, []);
 
   const selectedPlan = useMemo(
     () => plans.find((plan) => plan.id === selectedPlanId) ?? null,
