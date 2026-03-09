@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, Star, Zap, ArrowRight, Mail, UserRound, Loader2, Tag, Heart } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { Check, Star, Zap, ArrowRight, Mail, UserRound, Loader2, Tag, Heart, Lock } from "lucide-react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
