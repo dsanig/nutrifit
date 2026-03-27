@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Check, PartyPopper, Loader2, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { trackFunnelEvent } from "@/lib/funnelTracking";
 
 export default function Success() {
   const [searchParams] = useSearchParams();
@@ -35,6 +36,7 @@ export default function Success() {
 
       if (data?.success) {
         setVerified(true);
+        trackFunnelEvent("payment_completed", { sessionId: sid });
       } else if (data?.needsAccount) {
         setNeedsAccount(true);
         setError(data.error);

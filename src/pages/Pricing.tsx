@@ -8,6 +8,7 @@ import { Check, Star, Zap, ArrowRight, Mail, UserRound, Loader2, Tag, Heart, Loc
 import { useMemo, useRef, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { trackFunnelEvent } from "@/lib/funnelTracking";
 
 const plans = [
   {
@@ -75,6 +76,11 @@ export default function Pricing() {
   const [promoCode, setPromoCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const summaryRef = useRef<HTMLDivElement | null>(null);
+
+  // Track pricing page view
+  useEffect(() => {
+    trackFunnelEvent("pricing_viewed");
+  }, []);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -178,6 +184,7 @@ export default function Pricing() {
       }
       
       setCheckoutStep("checkout");
+      trackFunnelEvent("account_created", { plan: selectedPlan.id });
       toast.success("Cuenta creada correctamente");
     } catch (error) {
       console.error("Error creating account:", error);
@@ -233,6 +240,7 @@ export default function Pricing() {
         await saveTestAnswersToDb(session.user.id);
       }
 
+      trackFunnelEvent("checkout_started", { plan: selectedPlan.id });
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
           planId: selectedPlan.id,

@@ -7,6 +7,7 @@ import { questions, Question, QuestionOption, categories } from "@/lib/questions
 import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import { Header } from "@/components/landing/Header";
 import { supabase } from "@/integrations/supabase/client";
+import { trackFunnelEvent } from "@/lib/funnelTracking";
 
 type Answer = string | number | string[];
 
@@ -78,12 +79,17 @@ export default function Test() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, Answer>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasTrackedStart, setHasTrackedStart] = useState(false);
 
   const question = questions[currentQuestion];
   const currentAnswer = answers[question.id];
   const isLastQuestion = currentQuestion === questions.length - 1;
 
   const handleAnswer = (value: Answer) => {
+    if (!hasTrackedStart) {
+      trackFunnelEvent("test_started");
+      setHasTrackedStart(true);
+    }
     setAnswers((prev) => ({
       ...prev,
       [question.id]: value,
@@ -148,6 +154,7 @@ export default function Test() {
       console.error("Error saving test answers:", error);
     }
     
+    trackFunnelEvent("test_completed");
     navigate("/results");
   };
 
