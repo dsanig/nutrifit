@@ -8,6 +8,7 @@ import { Check, Star, Zap, ArrowRight, Mail, UserRound, Loader2, Tag, Heart, Loc
 import { useMemo, useRef, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { trackFunnelEvent } from "@/lib/funnelTracking";
 
 const plans = [
   {

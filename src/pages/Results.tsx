@@ -17,6 +17,7 @@ import {
   Brain
 } from "lucide-react";
 import { questions, categories } from "@/lib/questions";
+import { trackFunnelEvent } from "@/lib/funnelTracking";
 
 interface ProfileScore {
   category: string;
