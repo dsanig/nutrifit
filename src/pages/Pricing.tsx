@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, Star, Zap, ArrowRight, Mail, UserRound, Loader2, Tag, Heart, Lock } from "lucide-react";
+import { Check, Star, ArrowRight, Mail, UserRound, Loader2, Tag, Heart, Lock } from "lucide-react";
 import { useMemo, useRef, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -61,12 +61,10 @@ const plans = [
   },
 ];
 
-const ADD_ON_BASE_PRICE = 9.99; // €9.99 per month
 const VAGUS_BASE_PRICE = 12.50; // €12.50 per month
 
 export default function Pricing() {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [addOnSelected, setAddOnSelected] = useState(false);
   const [vagusSelected, setVagusSelected] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<"idle" | "email" | "account" | "checkout">("idle");
   const [isLoginMode, setIsLoginMode] = useState(false);
@@ -100,16 +98,10 @@ export default function Pricing() {
     [selectedPlanId],
   );
   
-  // Calculate add-on price based on plan duration (€25 per month)
-  const addOnPrice = useMemo(() => {
-    if (!selectedPlan) return 0;
-    return Math.round(ADD_ON_BASE_PRICE * selectedPlan.durationMonths * 100) / 100;
-  }, [selectedPlan]);
-
   // Vagus Reset is always 12.50€ (30-day program regardless of plan duration)
   const vagusPrice = VAGUS_BASE_PRICE;
   
-  const totalPrice = selectedPlan ? Math.round((selectedPlan.price + (addOnSelected ? addOnPrice : 0) + (vagusSelected ? vagusPrice : 0)) * 100) / 100 : 0;
+  const totalPrice = selectedPlan ? Math.round((selectedPlan.price + (vagusSelected ? vagusPrice : 0)) * 100) / 100 : 0;
 
   const handleSelectPlan = (planId: string) => {
     setSelectedPlanId(planId);
@@ -248,8 +240,8 @@ export default function Pricing() {
           email,
           name,
           duration: selectedPlan.duration,
-          includeAddOn: addOnSelected,
-          addOnQuantity: selectedPlan.durationMonths,
+          includeAddOn: false,
+          addOnQuantity: 0,
           includeVagusReset: vagusSelected,
           vagusResetQuantity: 1,
           promoCode: promoCode.trim() || undefined,
@@ -349,7 +341,7 @@ export default function Pricing() {
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {selectedPlan
-                    ? "Revisa los detalles, añade el seguimiento inteligente y confirma tu compra."
+                    ? "Revisa los detalles, añade el Reset del Nervio Vago y confirma tu compra."
                     : "Al elegir uno de los planes arriba, veremos aquí el resumen de compra."}
                 </p>
               </CardHeader>
@@ -372,14 +364,6 @@ export default function Pricing() {
                         <span className="text-sm text-foreground">{feature}</span>
                       </div>
                     ))}
-                    {addOnSelected && (
-                      <div className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-accent mt-0.5" />
-                        <span className="text-sm text-foreground">
-                          Seguimiento Inteligente activo (informes y ajustes semanales)
-                        </span>
-                      </div>
-                    )}
                     {vagusSelected && (
                       <div className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-emerald-500 mt-0.5" />
@@ -393,10 +377,6 @@ export default function Pricing() {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>Plan base</span>
                       <span>{selectedPlan.price}€</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>Seguimiento Inteligente</span>
-                      <span>{addOnSelected ? `+${addOnPrice}€` : "No añadido"}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>Reset Nervio Vago</span>
@@ -457,58 +437,6 @@ export default function Pricing() {
                       disabled={!selectedPlan}
                     >
                       {vagusSelected ? "Quitar del plan" : "Añadir al plan"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Premium Add-on */}
-          <Card className="border-2 border-accent/50 bg-accent/5 mb-8">
-            <CardContent className="p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row items-start gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-7 h-7 text-accent" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-bold text-foreground">
-                      Seguimiento Inteligente
-                    </h3>
-                    <span className="text-xs font-medium bg-accent/20 text-accent px-2 py-1 rounded-full">
-                      Premium
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground mb-4">
-                    Potencia tu progreso con seguimiento automatizado basado en IA. 
-                    Recibe ajustes semanales personalizados según tu evolución.
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-4 mb-4">
-                    <Feature text="Informe semanal de IA" />
-                    <Feature text="Ajustes automáticos del plan" />
-                    <Feature text="Chat con IA para modificar tu plan" />
-                    <Feature text="Historial de progreso" />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-2xl font-bold text-foreground">9,99€</span>
-                      <span className="text-muted-foreground">/mes</span>
-                      {selectedPlan && selectedPlan.durationMonths > 1 && (
-                        <span className="block text-sm text-muted-foreground">
-                          ({addOnPrice}€ para {selectedPlan.duration})
-                        </span>
-                      )}
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
-                      onClick={() => setAddOnSelected((prev) => !prev)}
-                      disabled={!selectedPlan}
-                    >
-                      {addOnSelected ? "Quitar del plan" : "Añadir al plan"}
                     </Button>
                   </div>
                 </div>
@@ -683,10 +611,6 @@ export default function Pricing() {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>{selectedPlan.name}</span>
                       <span>{selectedPlan.price}€</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>Seguimiento Inteligente</span>
-                      <span>{addOnSelected ? `+${addOnPrice}€` : "No añadido"}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>Reset Nervio Vago</span>
