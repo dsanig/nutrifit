@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PlanView } from "@/components/dashboard/PlanView";
 import { PlanGeneratingLoader } from "@/components/dashboard/PlanGeneratingLoader";
 import { VagusExercises } from "@/components/dashboard/VagusExercises";
+import { PlanChat } from "@/components/dashboard/PlanChat";
 import { 
   User, 
   Calendar, 
@@ -329,6 +330,13 @@ export default function Dashboard() {
     );
   }
 
+  const reloadPlan = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await loadUserPlan(session.user.id);
+    }
+  };
+
   // Show plan view if toggled
   if (showPlan && userPlan) {
     return (
@@ -342,6 +350,11 @@ export default function Dashboard() {
             </Button>
           </div>
           <PlanView plan={userPlan} userName={profile?.full_name || "Usuario"} />
+          {subscription?.includes_addon && (
+            <div className="mt-6">
+              <PlanChat planId={userPlan.id} onPlanUpdated={reloadPlan} />
+            </div>
+          )}
         </main>
       </div>
     );

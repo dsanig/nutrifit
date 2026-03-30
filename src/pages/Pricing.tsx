@@ -412,58 +412,6 @@ export default function Pricing() {
             </Card>
           </div>
 
-          {/* Premium Add-on */}
-          <Card className="border-2 border-accent/50 bg-accent/5 mb-8">
-            <CardContent className="p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row items-start gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-7 h-7 text-accent" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-bold text-foreground">
-                      Seguimiento Inteligente
-                    </h3>
-                    <span className="text-xs font-medium bg-accent/20 text-accent px-2 py-1 rounded-full">
-                      Premium
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground mb-4">
-                    Potencia tu progreso con seguimiento automatizado basado en IA. 
-                    Recibe ajustes semanales personalizados según tu evolución.
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-4 mb-4">
-                    <Feature text="Informe semanal de IA" />
-                    <Feature text="Ajustes automáticos del plan" />
-                    <Feature text="Mensajes motivacionales" />
-                    <Feature text="Historial de progreso" />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-2xl font-bold text-foreground">9,99€</span>
-                      <span className="text-muted-foreground">/mes</span>
-                      {selectedPlan && selectedPlan.durationMonths > 1 && (
-                        <span className="block text-sm text-muted-foreground">
-                          ({addOnPrice}€ para {selectedPlan.duration})
-                        </span>
-                      )}
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
-                      onClick={() => setAddOnSelected((prev) => !prev)}
-                      disabled={!selectedPlan}
-                    >
-                      {addOnSelected ? "Quitar del plan" : "Añadir al plan"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Vagus Reset Add-on */}
           <Card className="border-2 border-emerald-500/50 bg-emerald-500/5 mb-8">
             <CardContent className="p-6 sm:p-8">
@@ -509,6 +457,58 @@ export default function Pricing() {
                       disabled={!selectedPlan}
                     >
                       {vagusSelected ? "Quitar del plan" : "Añadir al plan"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Premium Add-on */}
+          <Card className="border-2 border-accent/50 bg-accent/5 mb-8">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row items-start gap-6">
+                <div className="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+                  <Zap className="w-7 h-7 text-accent" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold text-foreground">
+                      Seguimiento Inteligente
+                    </h3>
+                    <span className="text-xs font-medium bg-accent/20 text-accent px-2 py-1 rounded-full">
+                      Premium
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground mb-4">
+                    Potencia tu progreso con seguimiento automatizado basado en IA. 
+                    Recibe ajustes semanales personalizados según tu evolución.
+                  </p>
+                  
+                  <div className="flex flex-wrap gap-4 mb-4">
+                    <Feature text="Informe semanal de IA" />
+                    <Feature text="Ajustes automáticos del plan" />
+                    <Feature text="Chat con IA para modificar tu plan" />
+                    <Feature text="Historial de progreso" />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-2xl font-bold text-foreground">9,99€</span>
+                      <span className="text-muted-foreground">/mes</span>
+                      {selectedPlan && selectedPlan.durationMonths > 1 && (
+                        <span className="block text-sm text-muted-foreground">
+                          ({addOnPrice}€ para {selectedPlan.duration})
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                      onClick={() => setAddOnSelected((prev) => !prev)}
+                      disabled={!selectedPlan}
+                    >
+                      {addOnSelected ? "Quitar del plan" : "Añadir al plan"}
                     </Button>
                   </div>
                 </div>
