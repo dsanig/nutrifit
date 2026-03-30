@@ -8,12 +8,12 @@ const corsHeaders = {
 
 // Mapping de planes a price_id de Stripe
 const PRICE_IDS: Record<string, string> = {
-  prueba: "price_1SrjKcFd344hbed92UIuINVx",      // Plan Prueba 7 días - 9.99€
-  mensual: "price_1SrjQ9Fd344hbed9ViNx2Vfs",     // Plan Mensual - 29.99€
-  trimestral: "price_1SrjVIFd344hbed9EurXiI1B",  // Plan Trimestral - 74.99€
+  prueba: "price_1TGZlFFd344hbed9dQ8oWUOS",      // Plan Prueba 7 días - 4.99€
+  mensual: "price_1TGZmKFd344hbed9akXxu2L2",     // Plan Mensual - 14.99€
+  trimestral: "price_1TGZmfFd344hbed9DNshydFZ",  // Plan Trimestral - 24.99€
 };
 
-const ADDON_PRICE_ID = "price_1SrjWUFd344hbed9eCKQY7Em"; // Seguimiento Inteligente - 25€/mes
+const ADDON_PRICE_ID = "price_1TGZv3Fd344hbed9k2RI0vfP"; // Seguimiento Inteligente - 9.99€/mes
 const VAGUS_PRICE_ID = "price_1T6lPiFd344hbed9rzOVkUD4"; // Reset Nervio Vago - 12.50€/mes
 
 serve(async (req) => {

@@ -14,7 +14,7 @@ const plans = [
   {
     id: "prueba", // Matches Stripe price_id mapping
     name: "Prueba",
-    price: 9.99,
+    price: 4.99,
     duration: "7 días",
     durationMonths: 1, // 1 month of add-on for 7-day trial
     description: "Ideal para probar el sistema",
@@ -30,7 +30,7 @@ const plans = [
   {
     id: "mensual", // Matches Stripe price_id mapping
     name: "Mensual",
-    price: 29.99,
+    price: 14.99,
     duration: "1 mes",
     durationMonths: 1,
     description: "Nuestro plan más popular",
@@ -46,7 +46,7 @@ const plans = [
   {
     id: "trimestral", // Matches Stripe price_id mapping
     name: "Trimestral",
-    price: 74.99,
+    price: 24.99,
     duration: "3 meses",
     durationMonths: 3,
     description: "Mejor valor para resultados duraderos",
@@ -61,7 +61,7 @@ const plans = [
   },
 ];
 
-const ADD_ON_BASE_PRICE = 25; // €25 per month
+const ADD_ON_BASE_PRICE = 9.99; // €9.99 per month
 const VAGUS_BASE_PRICE = 12.50; // €12.50 per month
 
 export default function Pricing() {
@@ -442,7 +442,7 @@ export default function Pricing() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-2xl font-bold text-foreground">25€</span>
+                      <span className="text-2xl font-bold text-foreground">9,99€</span>
                       <span className="text-muted-foreground">/mes</span>
                       {selectedPlan && selectedPlan.durationMonths > 1 && (
                         <span className="block text-sm text-muted-foreground">
